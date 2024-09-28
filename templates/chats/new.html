@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% block title %}Chat{% endblock %}
+{% block content %}
+    <!-- Sidebar Start -->
+    <aside class="sidebar">
+        <!-- Tab Content Start -->
+        <div class="tab-content">
+            <!-- Chat Tab Content Start -->
+            <div class="tab-pane active" id="chats-content">
+                <div class="d-flex flex-column h-100">
+                    <div class="hide-scrollbar h-100" id="chatContactsList">
+
+                        <!-- Chat Header Start -->
+                        <div class="sidebar-header sticky-top p-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                 <!-- Chat Tab Pane Title Start -->
+                                 <h5 class="font-weight-semibold mb-0">Chats</h5>
+                                 <!-- Chat Tab Pane Title End -->
+                                 <button class="btn btn-outline-default mx-1 d-xl-none profile-btn" data-toggle-view="" type="button">
+                                    <span>Toggle Chats View</span> 
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Chat Header End -->
+
+                        {% include "./partials/_alerts.html" %}
+
+                        <!-- Chat Contact List Start -->
+                        <ul class="contacts-list" id="chatContactTab" data-chat-list="">
+
+                            {% if threads|length > 0 %}
+                            {% for thread in threads %}
+                            <!-- Chat Item Start -->
+                                {% if thread.id == thread_id %}
+                                <li class="contacts-item friends active">
+                                {% else %}
+                                <li class="contacts-item friends">
+                                {% endif %}
+                                    {% for user in thread.users %}
+                                        {% if user.id != current_user.id %}
+                                            <a class="contacts-link" href="/chats/{{thread.id}}" id="thread-{{thread.id}}" data-profile-chat="" data-thread-id="{{thread.id}}" data-thread-room="{{thread.name}}" data-user-id="{{user.id}}" data-current-user-id="{{current_user.id}}">
+                                                {% if user.is_online %}
+                                                <div class="avatar avatar-online mb-1 {{user.class_color}}">
+                                                {% else %}
+                                                <div class="avatar mb-1 {{user.class_color}}">
+                                                {% endif %}
+                                                    <span>
+                                                        {{user.first_name[0].capitalize()}}
+                                                        {{user.last_name[0].capitalize()}}
+                                                    </span>
+                                                </div>
+                                                <div class="contacts-content">
+                                                    <div class="contacts-info">
+                                                        <h6 class="chat-name text-truncate">
+                                                            {{user.first_name}} {{user.last_name}}
+                                                        </h6>
+                                                        <div class="chat-time" id="chatTime-{{thread.id}}">
+                                                            {{ thread.messages[-1].timestamp.strftime('%m/%d/%Y, %H:%M:%S') if thread.messages[-1] else '' }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="contacts-texts">
+                                                        <p class="text-truncate" id="lastMessage-{{thread.id}}">
+                                                            {{ thread.messages[-1].message_text if thread.messages[-1] else '' }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </li>
+                            <!-- Chat Item End -->
+                            {% endfor %}
+                            {% else %}
+                                <li class="contacts-item friends">
+                                    No Chats available
+                                </li>
+                            {% endif %}
+
+                        </ul>
+                        <!-- Chat Contact List End -->
+
+                    </div>
+                </div>
+            </div>
+            <!-- Chat Tab Content End -->
+
+        </div>
+        <!-- Tab Content End -->
+    </aside>   
+    <!-- Sidebar End --> 
+
+    <!-- Main Start -->
+    <main class="main">
+
+        <!-- Chats Page Start -->
+        <div class="chats chat-view">
+            <div class="chat-body">
+
+                <!-- Chat Header Start-->
+                <div class="chat-header">
+                    <!-- Chat Back Button (Visible only in Small Devices) -->
+
+                    <a href="/chats" class="btn btn-secondary btn-icon btn-minimal btn-sm text-muted d-xl-none" type="button" data-close="">
+                        <img class="injectable hw-20" src="/static/media/heroicons/arrow-left.svg" alt="">
+                    </a>
+
+                    <!-- Chat participant's Name -->
+                    <div class="media chat-name align-items-center text-truncate">
+                        {% if contact.is_online %}
+                        <div class="avatar avatar-online d-none d-sm-inline-block mr-3 {{contact.class_color}}">
+                        {% else %}
+                        <div class="avatar d-none d-sm-inline-block mr-3 {{contact.class_color}}">
+                        {% endif %}
+                            <span>
+                                {{contact.first_name[0].capitalize()}}
+                                {{contact.last_name[0].capitalize()}}
+                            </span>
+                        </div>
+
+                        <div class="media-body align-self-center ">
+                            <h6 class="text-truncate mb-0">
+                                {{contact.first_name}} {{contact.last_name}}
+                            </h6>
+                            <small class="text-muted">{{ 'Online' if contact.is_online else 'Offline' }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Chat Options -->
+                    <ul class="nav flex-nowrap">
+                        <li class="nav-item list-inline-item d-none d-sm-block mr-1">
+                            <a class="dropdown-item align-items-center d-flex" href="#" data-chat-info-toggle="">
+                                <img src="/static/media/heroicons/information-circle.svg" alt="" class="injectable hw-20 mr-2">
+                                <span>View User Info</span>
+                            </a>
+                        </li>
+                        
+                        
+                    </ul>
+                </div>
+                <!-- Chat Header End-->
+
+                <!-- Chat Content Start-->
+                <div class="chat-content p-2" id="messageBody">
+
+                    <div class="container" id="messageContainer">
+                        {% for message in thread.messages %}
+                            {% if message.author_id == current_user.id %}
+                                <div class='message self'>
+                                {% else %}
+                                <div class='message'>
+                            {% endif %}
+                                    <div class='message-wrapper'>
+                                        <div class='message-content'>
+                                            <span class="translated-msg badge bg-light text-dark">
+                                                {% if message.author_id == current_user.id %}
+                                                    {% if message.translated_language != message.message_language %}
+                                                        {{message.translated_language}}: <span class='translated-text'>{{message.translated_text}}</span>
+                                                    {% else %}
+                                                        {{message.translated_language}}
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if message.translated_language != message.message_language %}
+                                                        {{message.message_language}}: <span class='translated-text'>{{message.message_text}}</span>
+                                                    {% else %}
+                                                        {{message.message_language}}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </span>
+                                            <span class="original-msg">
+                                                {% if message.author_id == current_user.id %}
+                                                    {{message.message_text}}
+                                                {% else %}
+                                                    {{message.translated_text}}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class='message-options'>
+                                        {% if message.author_id == current_user.id %}
+                                            <div class='avatar avatar-sm {{current_user.class_color}}'>
+                                                <span>{{current_user.first_name[0]}} {{current_user.last_name[0]}}</span>
+                                            </div>
+                                        {% else %}
+                                            <div class='avatar avatar-sm {{contact.class_color}}'>
+                                                <span>{{contact.first_name[0]}} {{contact.last_name[0]}}</span>
+                                            </div>
+                                        {% endif %}
+                                        <span class='message-date'>{{message.timestamp.strftime('%m/%d/%Y, %H:%M:%S')}}</span>
+                                    </div>
+                                </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Scroll to finish -->
+                    <div class="chat-finished" id="chat-finished"></div>
+                </div>
+                <!-- Chat Content End-->
+
+                <!-- Chat Footer Start-->
+                <div class="chat-footer">
+                    <form method="POST" action="/chats/{{thread_id}}/language">
+                        {{ form.hidden_tag() }}
+                        <div class="form-group">
+                            <label for="target-language" class="target-language-label">Target Language</label>
+                            {{form.target_language(id_="target-language", class_="form-control form-control-md target-language", onchange="submit()")}}
+                        </div>  
+                    </form>                  
+                    <textarea class="form-control emojionearea-form-control" id="messageInput" rows="1" placeholder="Type your message here..."></textarea>
+                    <div id="messageBtn" class="btn btn-primary btn-icon send-icon rounded-circle text-light mb-1" role="button">
+                        <img src="/static/media/heroicons/arrow-right.svg" alt="" class="injectable">
+                    </div>
+                </div>
+                <!-- Chat Footer End-->
+
+            </div>
+
+            <!-- Chat Info Start -->
+            <div class="chat-info">
+                <div class="d-flex h-100 flex-column">
+
+                    <!-- Chat Info Header Start -->
+                    <div class="chat-info-header px-2">
+                        <div class="container-fluid">
+                            <ul class="nav justify-content-between align-items-center">
+                                <!-- Sidebar Title Start -->
+                                <li class="text-center">
+                                    <h5 class="text-truncate mb-0">Profile Details</h5>
+                                </li>
+                                <!-- Sidebar Title End -->
+
+                                <!-- Close Sidebar Start -->
+                                <li class="nav-item list-inline-item">
+                                    <a class="nav-link text-muted px-0" href="#" data-chat-info-close="">
+                                        <img class="injectable hw-22" src="/static/media/heroicons/x.svg" alt="">
+                                    </a>
+                                </li>
+                                <!-- Close Sidebar End -->
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Chat Info Header End  -->
+
+                    <!-- Chat Info Body Start  -->
+                    <div class="hide-scrollbar flex-fill">
+
+                        <!-- User Profile Start -->
+                        <div class="text-center p-3">
+
+                            <!-- User Profile Picture -->
+                            <div class="avatar avatar-xl h1 mx-5 mb-3 {{contact.class_color}}">
+                                <span>
+                                    {{contact.first_name[0].capitalize()}}
+                                    {{contact.last_name[0].capitalize()}}
+                                </span>
+                            </div>
+
+                            <!-- User Info -->
+                            <h5 class="mb-1">{{contact.first_name}} {{contact.last_name}}</h5>
+                            <p class="text-muted d-flex align-items-center justify-content-center">
+                                <img class="injectable mr-1 hw-18" src="/static/media/heroicons/location-marker.svg" alt="">
+                                <span>{{contact.country.name}}</span>
+                            </p>
+
+                            {% for call in contact.calls %}
+                                {% if call.in_call %}
+                                    {% set in_call = True %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if is_calling_user %}
+                                <p class="text-white rounded px-2 bg-info">
+                                    Join call
+                                </p>
+                            {% elif in_call or is_contact_in_call %}
+                                <p class="text-white rounded px-2 bg-warning">
+                                    Currently in call
+                                </p>
+                            {% else %}
+                                <span></span>
+                            {% endif %}
+
+                            <!-- User Quick Options -->
+                            <div class="d-flex align-items-center justify-content-center">
+                                <button class="btn btn-warning btn-icon rounded-circle text-light mx-1" disabled>
+                                    <img class="injectable hw-24" src="/static/media/heroicons/chat.svg" alt="">
+                                </button>
+                                {% if is_calling_user %}
+                                    <form action="/calls/new/{{contact.id}}" method="POST">
+                                        <button class="btn btn-info btn-icon rounded-circle text-light mx-1">
+                                            <img class="injectable hw-20" src="/static/media/heroicons/video.svg" alt="">
+                                        </button>
+                                    </form>
+                                {% elif in_call or is_contact_in_call %}
+                                    <button class="btn btn-warning btn-icon rounded-circle text-light mx-1" disabled>
+                                        <img class="injectable hw-20" src="/static/media/heroicons/video.svg" alt="">
+                                    </button>
+                                {% else %}
+                                    <form action="/calls/new/{{contact.id}}" method="POST">
+                                        <button class="btn btn-primary btn-icon rounded-circle text-light mx-1">
+                                            <img class="injectable hw-20" src="/static/media/heroicons/video.svg" alt="">
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <form action="/users/contacts/{{contact.id}}/delete" method="POST">
+                                    <button class="btn btn-danger btn-icon rounded-circle text-light mx-1">
+                                        <img class="injectable hw-20" src="/static/media/heroicons/ban.svg" alt="Remove contact">
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- User Profile End -->
+
+                        <!-- User Information Start -->
+                        <div class="chat-info-group">
+                            <a class="chat-info-group-header" data-toggle="collapse" href="#profile-info" role="button" aria-expanded="true" aria-controls="profile-info">
+                                <h6 class="mb-0">User Information</h6>
+                                <img class="injectable text-muted hw-20" src="/static/media/heroicons/information-circle.svg" alt="">
+                              </a>
+
+                            <div class="chat-info-group-body collapse show" id="profile-info">
+                                <div class="chat-info-group-content list-item-has-padding">
+                                    <!-- List Group Start -->
+                                    <ul class="list-group list-group-flush ">
+
+                                        <!-- List Group Item Start -->
+                                        <li class="list-group-item border-0">
+                                            <p class="small text-muted mb-0">Languages</p>
+                                            <p class="mb-0">
+                                                {% for language in contact.languages %}
+                                                <span class="badge badge-success language-badge">
+                                                    {{language.name}}
+                                                </span>
+                                                {% endfor %}
+                                            </p>
+                                        </li>
+                                        <!-- List Group Item End -->
+
+                                        <!-- List Group Item Start -->
+                                        <li class="list-group-item border-0">
+                                            <p class="small text-muted mb-0">Email</p>
+                                            <p class="mb-0">{{contact.email}}</p>
+                                        </li>
+                                        <!-- List Group Item End -->
+
+                                        <!-- List Group Item Start -->
+                                        <li class="list-group-item border-0">
+                                            <p class="small text-muted mb-0">Country / Region</p>
+                                            <p class="mb-0">{{contact.country.name}}</p>
+                                        </li>
+                                        <!-- List Group Item End -->
+                                    </ul>
+                                    <!-- List Group End -->
+                                </div>
+                            </div>
+                        </div>
+                        <!-- User Information End -->
+
+                    </div>
+                    <!-- Chat Info Body Start  -->
+
+                </div>
+            </div>
+            <!-- Chat Info End -->
+        </div>
+        <!-- Chats Page End -->
+
+    </main>
+    <!-- Main End -->
+
+    <script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="/static/js/chat.js"></script>
+    
+{% endblock %}

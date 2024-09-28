@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% block title %}Video Calls{% endblock %}
+{% block content %}
+    <!-- Sidebar Start -->
+    <aside class="sidebar">
+        <!-- Tab Content Start -->
+        <div class="tab-content">
+            <!-- Call Tab Content Start -->
+            <div class="tab-pane" id="calls-content">
+                <div class="d-flex flex-column h-100">
+                    <div class="hide-scrollbar h-100" id="callContactsList">
+                        <!-- Chat Header Start -->
+                        <div class="sidebar-header sticky-top p-2">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <!-- Chat Tab Pane Title Start -->
+                                <h5 class="font-weight-semibold mb-0">Video Calls</h5>
+                                <!-- Chat Tab Pane Title End -->
+                            </div>
+                            
+                            
+                            <!-- Sidebar Header Start -->
+                            <div class="sidebar-sub-header">
+                                <div>
+                                    <!-- Sidebar Search Start -->
+                                    <form class="form-inline">
+                                        <div class="input-group">
+                                            <input type="text" name="q" class="form-control search border-right-0 transparent-bg pr-0" placeholder="Search calls">
+                                            <div class="input-group-append">
+                                                <div class="input-group-text transparent-bg border-left-0" role="button">
+                                                    <img class="injectable hw-20" src="/static/media/heroicons/search.svg" alt="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <!-- Sidebar Search End -->
+                                </div>
+                                <div>
+                                    <button class="btn btn-outline-default mx-1 d-xl-none profile-btn" data-toggle-view="" type="button">
+                                        <span>Toggle Calls View</span> 
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Sidebar Header End -->
+                        </div>
+                        <!-- Chat Header End -->
+
+                        {% include "./partials/_alerts.html" %}
+
+                        <!-- Call Contact List Start -->
+                        <ul class="contacts-list" id="callLogTab" data-call-list="">
+                            
+                            {% for call in calls %}
+                            <!-- Call Item Start -->
+                            
+                                {% for user in call.users %}
+                                {% if user.id == contact.id %}
+                                <li class="contacts-item active outgoing">
+                                {% else %}
+                                <li class="contacts-item outgoing">
+                                {% endif %}
+                                    {% if user.id != current_user.id %}
+                                        {% if user.id == contact.id %}
+                                        {% if not call.end_timestamp %}
+                                        <a href="/calls/{{call.id}}" class="media-link">
+                                        {% else %}
+                                        <a href="/calls/info/{{user.id}}" class="media-link">
+                                        {% endif %}
+                                        {% else %}
+                                        <a href="/calls/info/{{user.id}}" class="media-link">
+                                        {% endif %}
+                                            <div class="contacts-link outgoing">
+                                                {% if user.is_online %}
+                                                <div class="avatar avatar-online mb-1 {{user.class_color}}">
+                                                {% else %}
+                                                <div class="avatar mb-1 {{user.class_color}}">
+                                                {% endif %}
+                                                    <span>
+                                                        {{user.first_name[0].capitalize()}}
+                                                        {{user.last_name[0].capitalize()}}
+                                                    </span>
+                                                </div>
+                                                <div class="contacts-content">
+                                                    <div class="contacts-info">
+                                                        <h6 class="chat-name text-truncate">
+                                                            {{user.first_name}} {{user.last_name}}
+                                                        </h6>
+                                                    </div>
+                                                    <div class="contacts-texts">
+                                                        <img class="injectable hw-16 text-muted mr-1" src="/static/media/heroicons/video.svg" alt="">
+                                                        <p class="text-muted mb-0">
+                                                            {% if not call.end_timestamp %}
+                                                                <span class="join-call">Join call</span>
+                                                            {% else %}
+                                                                {% set tm = relativedelta.relativedelta(datetime.now(), call.end_timestamp) %}
+                                                                {% if tm.years == 0 and tm.months == 0 and tm.days == 0 %}
+                                                                    {% if tm.hours == 0 %}
+                                                                        {% if tm.minutes > 0 and 60 > tm.seconds %}
+                                                                            {{tm.minutes}} minutes ago
+                                                                        {% else %}
+                                                                            {% if 30 > tm.seconds %}
+                                                                                Just now
+                                                                            {% else %}
+                                                                                {{tm.seconds}} seconds ago
+                                                                            {% endif %}
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        {{tm.hours}} hours ago
+                                                                    {% endif %}
+                                                                {% else %}
+                                                                    {% if tm.years == 0 and tm.months == 0 %}
+                                                                        {{tm.days}} days ago
+                                                                    {% elif tm.years == 0 and tm.months > 0 %}
+                                                                        {{tm.months}} months ago
+                                                                    {% else %}
+                                                                        {{tm.years}} years and {{tm.months}} months ago
+                                                                    {% endif %}
+                                                                {% endif %}
+                                                                <!-- {{ call.end_timestamp.strftime('%m/%d/%Y, %H:%M:%S') if call.end_timestamp else '' }} -->
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="contacts-action">
+                                                    <span>
+                                                        <img class="injectable hw-20" src="/static/media/heroicons/video.svg" alt="">
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            <!-- Call Item End -->
+                            {% endfor %}
+                        </ul>
+                        <!-- Call Contact List End -->
+                    </div>
+                </div>
+            </div>
+            <!-- Calls Tab Content End -->
+
+        </div>
+        <!-- Tab Content End -->
+    </aside>   
+    <!-- Sidebar End --> 
+
+    <!-- Main Start -->
+    <main class="main">
+
+        <!-- Call Log Page Start -->
+        <div class="calls px-0 py-2 p-xl-3 right-view">
+            <div class="container-xl">
+                <div class="row">
+                    <div class="col">
+                        <div class="card card-bg-1 mb-3">
+                            <div class="card-body">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="avatar avatar-lg mb-1 h3 {{contact.class_color}}">
+                                        <span>
+                                            {{contact.first_name[0].capitalize()}}
+                                            {{contact.last_name[0].capitalize()}}
+                                        </span>
+                                    </div>
+    
+                                    <div class="d-flex flex-column align-items-center">
+                                        <h5 class="mb-1">{{contact.full_name}}</h5>
+                                        
+                                            {% for call in contact.calls %}
+                                                {% if call.in_call %}
+                                                    {% set in_call = True %}
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% if is_calling_user %}
+                                                <p class="text-white rounded px-2 bg-info">
+                                                    Join call
+                                                </p>
+                                            {% elif in_call or is_contact_in_call %}
+                                                <p class="text-white rounded px-2 bg-warning">
+                                                    Currently in call
+                                                </p>
+                                            {% else %}
+                                                <p class="text-white rounded px-2 bg-primary">
+                                                    Available to call
+                                                </p>
+                                            {% endif %}
+
+                                            <div class="d-flex mt-2">
+                                                {% if is_calling_user %}
+                                                    <form action="/calls/new/{{contact.id}}" method="POST">
+                                                        <button class="btn btn-info btn-icon rounded-circle text-light mx-2">
+                                                            <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                        </button>
+                                                    </form>
+                                                {% elif in_call or is_contact_in_call %}
+                                                    <button class="btn btn-warning btn-icon rounded-circle text-light mx-2" disabled>
+                                                        <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                    </button>
+                                                {% else %}
+                                                    <form action="/calls/new/{{contact.id}}" method="POST">
+                                                        <button class="btn btn-primary btn-icon rounded-circle text-light mx-2">
+                                                            <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-closer d-xl-none">
+                                <!-- Chat Back Button (Visible only in Small Devices) -->
+                                <a href="/calls" class="btn btn-secondary btn-icon btn-minimal btn-sm text-muted" type="button" data-close="">
+                                    <img class="injectable hw-20" src="/static/media/heroicons/arrow-left.svg" alt="">
+                                </a>
+                            </div>
+                           
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row calls-log">
+                    <div class="col">
+
+                        {% for call in contact_calls %}
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="media">
+                                    {% if is_calling_user %}
+                                        <form action="/calls/new/{{contact.id}}" method="POST">
+                                            <button class="btn btn-info btn-icon rounded-circle text-light mx-2">
+                                                <span>
+                                                    <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                </span>
+                                            </button>
+                                        </form>
+                                    {% elif in_call or is_contact_in_call %}
+                                        <button class="btn btn-warning btn-icon rounded-circle text-light mx-2" disabled>
+                                            <span>
+                                                <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                            </span>
+                                        </button>
+                                    {% else %}
+                                        <form action="/calls/new/{{contact.id}}" method="POST">
+                                            <button class="btn btn-primary btn-icon rounded-circle text-light mx-2">
+                                                <span>
+                                                    <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                </span>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+
+                                    <div class="media-body">
+                                        <h6>
+                                            {% if call.author_id == current_user.id %}
+                                            Outgoing Call
+                                            {% else %}
+                                            Incoming Call
+                                            {% endif %}
+                                        </h6>
+
+                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center align-items-start">
+                                            <p class="text-muted mb-0">
+                                                {% if not call.end_timestamp %}
+                                                    Call available
+                                                {% else %}
+                                                    {% set tm = relativedelta.relativedelta(datetime.now(), call.end_timestamp) %}
+                                                    {% if tm.years == 0 and tm.months == 0 and tm.days == 0 %}
+                                                        {% if tm.hours == 0 %}
+                                                            {% if tm.minutes > 0 and 60 > tm.seconds %}
+                                                                {{tm.minutes}} minutes ago
+                                                            {% else %}
+                                                                {% if 30 > tm.seconds %}
+                                                                    Just now
+                                                                {% else %}
+                                                                    {{tm.seconds}} seconds ago
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        {% else %}
+                                                            {{tm.hours}} hours ago
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {% if tm.years == 0 and tm.months == 0 %}
+                                                            {{tm.days}} days ago
+                                                        {% elif tm.years == 0 and tm.months > 0 %}
+                                                            {{tm.months}} months ago
+                                                        {% else %}
+                                                            {{tm.years}} years and {{tm.months}} months ago
+                                                        {% endif %}
+                                                    {% endif %}
+                                                    <!-- {{ call.end_timestamp.strftime('%m/%d/%Y, %H:%M:%S') if call.end_timestamp else '' }} -->
+                                                {% endif %}
+                                            </p>
+                                            <span class="d-none d-sm-block text-muted mx-2">•</span>
+                                            <p class="text-muted mb-0">
+                                                {% if call.start_timestamp %}
+                                                {% set dur = relativedelta.relativedelta(call.end_timestamp, call.start_timestamp) %}
+                                                    {{ dur.hours }}h {{ dur.minutes }}m {{ dur.seconds }}s
+                                                {% else %}
+                                                    <span class="call-cancelled">Call cancelled</span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="media-options ml-1 d-none d-sm-block">
+                                        <span>
+                                            <img class="injectable hw-20" src="/static/media/heroicons/video.svg" alt="">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Call Log Page End -->
+
+    </main>
+    <!-- Main End -->
+{% endblock %}

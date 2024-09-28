@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}Users{% endblock %}
+{% block content %}
+    <!-- Sidebar Start -->
+    <aside class="sidebar">
+        <div class="tab-content">
+            <!-- Users Tab Content Start -->
+            <div class="tab-pane" id="friends-content">
+                <div class="d-flex flex-column h-100">
+                    <div class="hide-scrollbar" id="friendsList">
+                        <!-- Chat Header Start -->
+                        <div class="sidebar-header sticky-top p-2">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <!-- Chat Tab Pane Title Start -->
+                                <h5 class="font-weight-semibold mb-0">Users</h5>
+                                <!-- Chat Tab Pane Title End -->
+                            </div>
+        
+                            <!-- Sidebar Header Start -->
+                            <div class="sidebar-sub-header">
+                                <div>
+                                    <!-- Sidebar Search Start -->
+                                    <form class="form-inline" action="/users/{{main_user.id}}">
+                                        <div class="input-group">
+                                            <input name="q" type="text" class="form-control search border-right-0 transparent-bg pr-0" placeholder="Search users">
+                                            <div class="input-group-append">
+                                                <div class="input-group-text transparent-bg border-left-0" role="button">
+                                                    <img class="injectable hw-20" src="/static/media/heroicons/search.svg" alt="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <!-- Sidebar Search End -->
+                                </div>
+                                <div>
+                                    <button class="btn btn-outline-default mx-1 d-xl-none profile-btn" data-toggle-view="" type="button">
+                                        <span>Toggle Users View</span> 
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Sidebar Header End -->
+                        </div>
+                        <!-- Chat Header End -->
+
+                        {% include "./partials/_alerts.html" %}
+
+                        <!-- Friends Contact List Start -->
+                        <ul class="contacts-list" id="friendsTab" data-friends-list="">
+
+                            {% if users|length > 0 %}
+                            {% for user in users %}
+                                <!-- friends Item Start -->
+                                {% if user.id == main_user.id %}
+                                <li class="contacts-item active">
+                                {% else %}
+                                <li class="contacts-item">
+                                {% endif %}
+                                    <a class="contacts-link" href="/users/{{user.id}}">
+                                        {% if user.is_online %}
+                                        <div class="avatar avatar-online mb-1 {{user.class_color}}">
+                                        {% else %}
+                                        <div class="avatar mb-1 {{user.class_color}}">
+                                        {% endif %}
+                                            <span>
+                                                {{user.first_name[0]}}
+                                                {{user.last_name[0]}}
+                                            </span>
+                                        </div>
+                                        <div class="contacts-content">
+                                            <div class="contacts-info">
+                                                <h6 class="chat-name text-truncate">{{user.username}}</h6>
+                                            </div>
+                                            <div class="contacts-texts">
+                                                <img class="injectable hw-16 text-muted mr-1" src="/static/media/heroicons/location-marker.svg" alt="">
+                                                <p class="text-muted mb-0">{{user.country.name}}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <!-- friends Item End -->
+                            {% endfor %}
+                            {% else %}
+                                <li class="contacts-item not-available">
+                                    No Contacts available
+                                </li>
+                            {% endif %}
+                        </ul>
+                        <!-- Friends Contact List End -->
+                    </div>
+                </div>
+            </div>
+            <!-- Users Tab Content End -->
+        </div>
+    </aside>
+    <!-- Sidebar End -->
+
+    <!-- Main Start -->
+    <!-- <div class="main main-visible"> -->
+    <div class="main">
+        <div class="friends right-view px-0 py-2 p-xl-3">
+            <div class="container-xl">
+                <div class="row">
+                    <div class="col">
+                        <div class="card card-body card-bg-1 mb-3">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="avatar avatar-lg mb-1 h3 {{main_user.class_color}}">
+                                    <span>
+                                        {{main_user.first_name[0].capitalize()}}
+                                        {{main_user.last_name[0].capitalize()}}
+                                    </span>
+                                </div>
+
+                                <div class="d-flex flex-column align-items-center">
+                                    <h5 class="mb-1">{{main_user.username}}</h5>
+                                    <!-- <p class="text-white rounded px-2 bg-primary">+01-202-265462</p> -->
+                                    <div class="d-flex mt-2">
+                                        <form action="/users/{{main_user.id}}" method="POST">
+                                            <button class="btn btn-primary btn-icon rounded-circle text-light mx-2">
+                                                <img class="injectable hw-24" src="/static/media/heroicons/user-add.svg" alt="Add contact">
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chat-closer d-xl-none">
+                                <!-- Chat Back Button (Visible only in Small Devices) -->
+                                <a href="/users" class="btn btn-secondary btn-icon btn-minimal btn-sm text-muted" type="button" data-close="">
+                                    <img class="injectable hw-20" src="/static/media/heroicons/arrow-left.svg" alt="">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row friends-info">
+                    <div class="col">
+                        <div class="card">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <div class="media align-items-center">
+                                        <div class="media-body">
+                                            <p class="small text-muted mb-0">Username</p>
+                                            <p class="mb-0">{{main_user.username}}</p>
+                                        </div>
+                                        <img class="injectable text-muted hw-20" src="/static/media/heroicons/user-circle.svg" alt="">
+                                    </div>
+                                </li>
+                                <li class="list-group-item">
+                                    <div class="media align-items-center">
+                                        <div class="media-body">
+                                            <p class="small text-muted mb-0">Languages</p>
+                                            <p class="mb-0">
+                                                {% for language in main_user.languages %}
+                                                    <span class="badge badge-success language-badge">
+                                                        {{language.name}}
+                                                    </span>
+                                                {% endfor %}
+                                            </p>
+                                        </div>
+                                        <img class="injectable text-muted hw-20" src="/static/media/heroicons/chat-bubble-oval-left-ellipsis.svg" alt="">
+                                    </div>
+                                </li>
+                                <li class="list-group-item">
+                                    <div class="media align-items-center">
+                                        <div class="media-body">
+                                            <p class="small text-muted mb-0">Country / Region</p>
+                                            <p class="mb-0">{{main_user.country.name}}</p>
+                                        </div>
+                                        <img class="injectable text-muted hw-20" src="/static/media/heroicons/globe.svg" alt="">
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- Friends Page End -->
+    </div>
+    <!-- Main End -->
+
+    <div class="backdrop"></div>
+        
+{% endblock %}

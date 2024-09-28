@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <link rel="stylesheet" href="/static/css/app.css">
+    <title>Video Call</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body class="chats-tab-open">
+    <!-- Main Layout Start -->
+    <div class="video-layout">
+    
+    {% include "./partials/_alerts.html" %}
+
+    <!-- Main Start -->
+    <main class="main">
+
+        <!-- Chats Page Start -->
+        <div class="chats video-chats">
+            <div class="chat-body">
+
+                <!-- Chat Header Start-->
+                <div class="chat-header">
+                    <!-- Chat Back Button (Visible only in Small Devices) -->
+                    <a href="/calls" class="btn btn-secondary btn-icon btn-minimal btn-sm text-muted d-xl-none" type="button" data-close="">
+                        <img class="injectable hw-20" src="/static/media/heroicons/arrow-left.svg" alt="">
+                    </a>
+                    <!-- Chat participant's Name -->
+                    <div class="media chat-name align-items-center text-truncate">
+                        {% if contact.is_online %}
+                        <div class="avatar avatar-online d-none d-sm-inline-block mr-3 {{contact.class_color}}">
+                        {% else %}
+                        <div class="avatar d-none d-sm-inline-block mr-3 {{contact.class_color}}">
+                        {% endif %}
+                            <span>
+                                {{contact.first_name[0].capitalize()}}
+                                {{contact.last_name[0].capitalize()}}
+                            </span>
+                        </div>
+
+                        <div class="media-body align-self-center ">
+                            <h6 class="text-truncate mb-0">
+                                {{contact.first_name}} {{contact.last_name}}
+                            </h6>
+                            <small class="text-muted">{{ 'Online' if contact.is_online else 'Offline' }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Chat Options -->
+                    <ul class="nav flex-nowrap">
+                        <li class="nav-item list-inline-item d-none d-sm-block mr-1">
+                            <a class="dropdown-item align-items-center d-flex" href="#" data-chat-info-toggle="">
+                                <img src="/static/media/heroicons/information-circle.svg" alt="" class="injectable hw-20 mr-2">
+                                <span>View User Info</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Chat Header End-->
+
+                <!-- Chat Content Start-->
+                <div class="chat-content d-flex justify-content-center align-items-center p-2" style="height: 100%;">
+
+                    <div id="video-container" data-call-id="{{call.id}}" data-room-id="{{call.room_id}}" data-contact-id="{{contact.id}}" data-current-user-id="{{current_user.id}}">
+                        <video id="user-1" class="video-tile" autoplay playsinline></video>
+                        <video id="user-2" class="video-tile" autoplay playsinline></video>
+                    </div>
+                    
+                </div>
+                <!-- Chat Content End-->
+
+                <!-- Chat Footer Start-->
+                <div class="chat-footer">                    
+                    <div id="controls">
+                        <div class="control-container" id="camera-btn">
+                            <img src="/static/media/heroicons/video.svg" />
+                        </div>
+                        <div class="control-container" id="mic-btn">
+                            <img src="/static/media/heroicons/microphone.svg" />
+                        </div>
+                        <form action="/calls/{{call.id}}/close" method="POST">
+                            <button class="round" type="submit">
+                                <div class="control-container" id="leave-btn">
+                                    <img src="/static/media/heroicons/x.svg" />
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Chat Footer End-->
+
+            </div>
+
+            <!-- Chat Info Start -->
+            <div class="chat-info">
+                <div class="d-flex h-100 flex-column">
+
+                    <!-- Chat Info Header Start -->
+                    <div class="chat-info-header px-2">
+                        <div class="container-fluid">
+                            <ul class="nav justify-content-between align-items-center">
+                                <!-- Sidebar Title Start -->
+                                <li class="text-center">
+                                    <h5 class="text-truncate mb-0">Profile Details</h5>
+                                </li>
+                                <!-- Sidebar Title End -->
+
+                                <!-- Close Sidebar Start -->
+                                <li class="nav-item list-inline-item">
+                                    <a class="nav-link text-muted px-0" href="#" data-chat-info-close="">
+                                        <img class="injectable hw-22" src="/static/media/heroicons/x.svg" alt="">
+                                    </a>
+                                </li>
+                                <!-- Close Sidebar End -->
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Chat Info Header End  -->
+
+                    <!-- Chat Info Body Start  -->
+                    <div class="hide-scrollbar flex-fill">
+
+                        <!-- User Profile Start -->
+                        <div class="text-center p-3">
+
+                            <!-- User Profile Picture -->
+                            <div class="avatar avatar-xl h1 mx-5 mb-3 {{contact.class_color}}">
+                                <span>
+                                    {{contact.first_name[0].capitalize()}}
+                                    {{contact.last_name[0].capitalize()}}
+                                </span>
+                            </div>
+
+                            <!-- User Info -->
+                            <h5 class="mb-1">{{contact.first_name}} {{contact.last_name}}</h5>
+                            <p class="text-muted d-flex align-items-center justify-content-center">
+                                <img class="injectable mr-1 hw-18" src="/static/media/heroicons/location-marker.svg" alt="">
+                                <span>{{contact.country.name}}</span>
+                            </p>
+
+                            <!-- User Quick Options -->
+                            <div class="d-flex align-items-center justify-content-center">
+                                <form action="/chats/new/{{contact.id}}" method="POST">
+                                    <button class="btn btn-info btn-icon rounded-circle text-light mx-1">
+                                        <img class="injectable hw-24" src="/static/media/heroicons/chat.svg" alt="">
+                                    </button>
+                                </form>
+                                <button class="btn btn-warning btn-icon rounded-circle text-light mx-1" disabled>
+                                    <img class="injectable hw-20" src="/static/media/heroicons/video.svg" alt="">
+                                </button>
+                                <form action="/users/contacts/{{contact.id}}/delete" method="POST">
+                                    <button class="btn btn-danger btn-icon rounded-circle text-light mx-1">
+                                        <img class="injectable hw-20" src="/static/media/heroicons/ban.svg" alt="Remove contact">
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- User Profile End -->
+
+                        <!-- User Information Start -->
+                        <div class="chat-info-group">
+                            <a class="chat-info-group-header" data-toggle="collapse" href="#profile-info" role="button" aria-expanded="true" aria-controls="profile-info">
+                                <h6 class="mb-0">User Information</h6>
+                                <img class="injectable text-muted hw-20" src="/static/media/heroicons/information-circle.svg" alt="">
+                              </a>
+
+                            <div class="chat-info-group-body collapse show" id="profile-info">
+                                <div class="chat-info-group-content list-item-has-padding">
+                                    <!-- List Group Start -->
+                                    <ul class="list-group list-group-flush ">
+
+                                        <!-- List Group Item Start -->
+                                        <li class="list-group-item border-0">
+                                            <p class="small text-muted mb-0">Languages</p>
+                                            <p class="mb-0">
+                                                {% for language in contact.languages %}
+                                                <span class="badge badge-success language-badge">
+                                                    {{language.name}}
+                                                </span>
+                                                {% endfor %}
+                                            </p>
+                                        </li>
+                                        <!-- List Group Item End -->
+
+                                        <!-- List Group Item Start -->
+                                        <li class="list-group-item border-0">
+                                            <p class="small text-muted mb-0">Email</p>
+                                            <p class="mb-0">{{contact.email}}</p>
+                                        </li>
+                                        <!-- List Group Item End -->
+
+                                        <!-- List Group Item Start -->
+                                        <li class="list-group-item border-0">
+                                            <p class="small text-muted mb-0">Country / Region</p>
+                                            <p class="mb-0">{{contact.country.name}}</p>
+                                        </li>
+                                        <!-- List Group Item End -->
+                                    </ul>
+                                    <!-- List Group End -->
+                                </div>
+                            </div>
+                        </div>
+                        <!-- User Information End -->
+
+                    </div>
+                    <!-- Chat Info Body Start  -->
+
+                </div>
+            </div>
+            <!-- Chat Info End -->
+        </div>
+        <!-- Chats Page End -->
+
+    </main>
+    <!-- Main End -->
+
+    <script src="/static/js/call.js"></script>
+
+</div>
+<!-- Main Layout End -->
+
+<!-- Javascript Files -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

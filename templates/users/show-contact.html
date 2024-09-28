@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% block title %}Contacts{% endblock %}
+{% block content %}
+    <!-- Sidebar Start -->
+    <aside class="sidebar">
+        <div class="tab-content">
+            <!-- Users Tab Content Start -->
+            <div class="tab-pane" id="friends-content">
+                <div class="d-flex flex-column h-100">
+                    <div class="hide-scrollbar" id="friendsList">
+                        <!-- Chat Header Start -->
+                        <div class="sidebar-header sticky-top p-2">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <!-- Chat Tab Pane Title Start -->
+                                <h5 class="font-weight-semibold mb-0">Contacts</h5>
+                                <!-- Chat Tab Pane Title End -->
+                            </div>
+        
+                            <!-- Sidebar Header Start -->
+                            <div class="sidebar-sub-header">
+                                <div>
+                                    <!-- Sidebar Search Start -->
+                                    <form class="form-inline" action="/users/contacts/{{main_contact.id}}">
+                                        <div class="input-group">
+                                            <input name="q" type="text" class="form-control search border-right-0 transparent-bg pr-0" placeholder="Search contacts">
+                                            <div class="input-group-append">
+                                                <div class="input-group-text transparent-bg border-left-0" role="button">
+                                                    <img class="injectable hw-20" src="/static/media/heroicons/search.svg" alt="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <!-- Sidebar Search End -->
+                                </div>
+                                <div>
+                                    <button class="btn btn-outline-default mx-1 d-xl-none profile-btn" data-toggle-view="" type="button">
+                                        <span>Toggle Contacts View</span> 
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Sidebar Header End -->
+                        </div>
+                        <!-- Chat Header End -->
+
+                        {% include "./partials/_alerts.html" %}
+
+                        <!-- Friends Contact List Start -->
+                        <ul class="contacts-list" id="friendsTab" data-friends-list="">
+
+                            {% if contacts|length > 0 %}
+                            {% for contact in contacts %}
+                                <!-- friends Item Start -->
+                                {% if contact.id == main_contact.id %}
+                                <li class="contacts-item active">
+                                {% else %}
+                                <li class="contacts-item">
+                                {% endif %}
+                                    <a class="contacts-link" href="/users/contacts/{{contact.id}}">
+                                        {% if contact.is_online %}
+                                        <div class="avatar avatar-online mb-1 {{contact.class_color}}">
+                                        {% else %}
+                                        <div class="avatar mb-1 {{contact.class_color}}">
+                                        {% endif %}
+                                            <span>
+                                                {{contact.first_name[0]}}
+                                                {{contact.last_name[0]}}
+                                            </span>
+                                        </div>
+                                        <div class="contacts-content">
+                                            <div class="contacts-info">
+                                                <div class="contacts-info">
+                                                    {% if not contact.is_pending.contact_pending and not contact.is_pending.user_pending %}
+                                                        <h6 class="chat-name text-truncate">{{contact.first_name}} {{contact.last_name}}</h6>
+                                                    {% else %}
+                                                        <h6 class="chat-name text-truncate">{{contact.username}}</h6>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="contacts-texts">
+                                                <img class="injectable hw-16 text-muted mr-1" src="/static/media/heroicons/location-marker.svg" alt="">
+                                                <p class="text-muted mb-0">{{contact.country.name}}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <!-- friends Item End -->
+                            {% endfor %}
+                            {% else %}
+                                <li class="contacts-item not-available">
+                                    No Contacts available
+                                </li>
+                            {% endif %}
+                            
+                        </ul>
+                        <!-- Friends Contact List End -->
+
+                    </div>
+                </div>
+            </div>
+            <!-- Users Tab Content End -->
+        </div>
+    </aside>
+    <!-- Sidebar End -->
+
+    <!-- Main Start -->
+    <!-- <div class="main main-visible"> -->
+    <div class="main">
+        <div class="friends right-view px-0 py-2 p-xl-3">
+            <div class="container-xl">
+                <div class="row">
+                    <div class="col">
+                        <div class="card card-body card-bg-1 mb-3">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="avatar avatar-lg mb-1 h3 {{main_contact.class_color}}">
+                                    <span>
+                                        {{main_contact.first_name[0].capitalize()}}
+                                        {{main_contact.last_name[0].capitalize()}}
+                                    </span>
+                                </div>
+
+                                {% for call in main_contact.calls %}
+                                    {% if call.in_call %}
+                                        {% set in_call = True %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                <div class="d-flex flex-column align-items-center">
+
+                                    {% if is_pending.contact_pending or is_pending.user_pending %}
+                                        <h5 class="mb-1">
+                                            {{main_contact.username}}
+                                        </h5>
+                                    {% else %}
+                                        <h5 class="mb-1">
+                                            {{main_contact.first_name}} {{main_contact.last_name}}
+                                        </h5>
+                                    {% endif %}
+
+                                    {% if is_pending.contact_pending or is_pending.user_pending %}
+                                        <p class="text-white rounded px-2 bg-primary">Contact Pending</p>
+                                    {% endif %}
+
+                                    {% if is_calling %}
+                                        <p class="text-white rounded px-2 bg-info">
+                                            Join call
+                                        </p>
+                                    {% elif in_call or is_contact_in_call %}
+                                        <p class="text-white rounded px-2 bg-warning">
+                                            Currently in call
+                                        </p>
+                                    {% else %}
+                                        <span></span>
+                                    {% endif %}
+
+                                    <div class="d-flex mt-2">
+                                        {% if is_pending.contact_pending or is_pending.user_pending %}
+                                            {% if is_pending.user_pending %}
+                                                <form action="/users/contacts/{{main_contact.id}}/update" method="POST">
+                                                    <button class="btn btn-warning btn-icon rounded-circle text-light mx-2">
+                                                        <img class="injectable hw-24" src="/static/media/heroicons/user-add.svg" alt="Add contact">
+                                                    </button>
+                                                </form>
+                                                <form action="/users/contacts/{{main_contact.id}}/delete" method="POST">
+                                                    <button class="btn btn-danger btn-icon rounded-circle text-light mx-2">
+                                                        <img class="injectable hw-24" src="/static/media/heroicons/x.svg" alt="Add contact">
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                            <form action="/users/contacts/{{main_contact.id}}/delete" method="POST">
+                                                <button class="btn btn-danger btn-icon rounded-circle text-light mx-2">
+                                                    <img class="injectable hw-24" src="/static/media/heroicons/x.svg" alt="Add contact">
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        {% endif %}
+                                        {% if is_pending.contact_pending or is_pending.user_pending %}
+                                            <button class="btn btn-secondary btn-icon rounded-circle text-light mx-2" disabled>
+                                                <img class="injectable hw-24" src="/static/media/heroicons/chat.svg" alt="">
+                                            </button>
+                                        {% else %}
+                                            <form action="/chats/new/{{main_contact.id}}" method="POST">
+                                                <button class="btn {{'btn-info' if is_chatting else 'btn-primary'}} btn-icon rounded-circle text-light mx-2">
+                                                    <img class="injectable hw-24" src="/static/media/heroicons/chat.svg" alt="">
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        {% if is_pending.contact_pending or is_pending.user_pending %}
+                                            <button class="btn btn-secondary btn-icon rounded-circle text-light mx-2" disabled>
+                                                <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                            </button>
+                                        {% else %}
+
+                                            {% if is_calling %}
+                                                <form action="/calls/new/{{main_contact.id}}" method="POST">
+                                                    <button class="btn btn-info btn-icon rounded-circle text-light mx-2">
+                                                        <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                    </button>
+                                                </form>
+                                            {% elif in_call or is_contact_in_call %}
+                                                <button class="btn btn-warning btn-icon rounded-circle text-light mx-2" disabled>
+                                                    <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                </button>
+                                            {% else %}
+                                                <form action="/calls/new/{{main_contact.id}}" method="POST">
+                                                    <button class="btn btn-primary btn-icon rounded-circle text-light mx-2">
+                                                        <img class="injectable hw-24" src="/static/media/heroicons/video.svg" alt="">
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+
+                                            <form action="/users/contacts/{{main_contact.id}}/delete" method="POST">
+                                                <button class="btn btn-danger btn-icon rounded-circle text-light mx-1">
+                                                    <img class="injectable hw-20" src="/static/media/heroicons/ban.svg" alt="Remove contact">
+                                                </button>
+                                            </form>
+
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chat-closer d-xl-none">
+                                <!-- Chat Back Button (Visible only in Small Devices) -->
+                                <a href="/contacts" class="btn btn-secondary btn-icon btn-minimal btn-sm text-muted" type="button" data-close="">
+                                    <img class="injectable hw-20" src="/static/media/heroicons/arrow-left.svg" alt="">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row friends-info">
+                    <div class="col">
+                        <div class="card">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <div class="media align-items-center">
+                                        <div class="media-body">
+                                            <p class="small text-muted mb-0">Username</p>
+                                            <p class="mb-0">{{main_contact.username}}</p>
+                                        </div>
+                                        <img class="injectable text-muted hw-20" src="/static/media/heroicons/user-circle.svg" alt="">
+                                    </div>
+                                </li>
+                                {% if not is_pending.contact_pending and not is_pending.user_pending %}
+                                    <li class="list-group-item">
+                                        <div class="media align-items-center">
+                                            <div class="media-body">
+                                                <p class="small text-muted mb-0">Full Name</p>
+                                                <p class="mb-0">{{main_contact.full_name}}</p>
+                                            </div>
+                                            <img class="injectable text-muted hw-20" src="/static/media/heroicons/face-smile.svg" alt="">
+                                        </div>
+                                    </li>
+                                {% endif %}
+                                <li class="list-group-item">
+                                    <div class="media align-items-center">
+                                        <div class="media-body">
+                                            <p class="small text-muted mb-0">Languages</p>
+                                            <p class="mb-0">
+                                                {% for language in main_contact.languages %}
+                                                    <span class="badge badge-success language-badge">
+                                                        {{language.name}}
+                                                    </span>
+                                                {% endfor %}
+                                            </p>
+                                        </div>
+                                        <img class="injectable text-muted hw-20" src="/static/media/heroicons/chat-bubble-oval-left-ellipsis.svg" alt="">
+                                    </div>
+                                </li>
+                                {% if not is_pending.contact_pending and not is_pending.user_pending %}
+                                    <li class="list-group-item">
+                                        <div class="media align-items-center">
+                                            <div class="media-body">
+                                                <p class="small text-muted mb-0">Email</p>
+                                                <p class="mb-0">{{main_contact.email}}</p>
+                                            </div>
+                                            <img class="injectable text-muted hw-20" src="/static/media/heroicons/mail.svg" alt="">
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="media align-items-center">
+                                            <div class="media-body">
+                                                <p class="small text-muted mb-0">City</p>
+                                                <p class="mb-0">{{main_contact.city}}</p>
+                                            </div>
+                                            <img class="injectable text-muted hw-20" src="/static/media/heroicons/building-office-2.svg" alt="">
+                                        </div>
+                                    </li>
+                                {% endif %}
+                                <li class="list-group-item">
+                                    <div class="media align-items-center">
+                                        <div class="media-body">
+                                            <p class="small text-muted mb-0">Country / Region</p>
+                                            <p class="mb-0">{{main_contact.country.name}}</p>
+                                        </div>
+                                        <img class="injectable text-muted hw-20" src="/static/media/heroicons/globe.svg" alt="">
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- Friends Page End -->
+    </div>
+    <!-- Main End -->
+
+    <div class="backdrop"></div>
+        
+{% endblock %}
