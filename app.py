@@ -16,14 +16,14 @@ import html2text
 import json, os
 import uuid
 
-CURR_USER_KEY = 'curr_user'
+CURR_USER_KEY = 'CURR_USER_KEY'
 
 async_mode = None
 
 instrument = False
 admin_login = {
-    'username': 'admin',
-    'password': '*Polyglot78', 
+    'username': 'USERNAME',
+    'password': 'PASSWORD', 
 }
 
 sio = Server(
@@ -36,7 +36,7 @@ app = Flask(__name__)
 app.wsgi_app = WSGIApp(sio, app.wsgi_app)
 
 app.url_map.strict_slashes = False
-app.config['SECRET_KEY'] = 'blueoceanfloorXfrequenciessolow'
+app.config['SECRET_KEY'] = 'SECRET_KEY'
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 debug = DebugToolbarExtension(app)
